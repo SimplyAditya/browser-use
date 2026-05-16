@@ -2,12 +2,49 @@ import logging
 import os
 import sys
 from pathlib import Path
+from threading import Lock
 
 from dotenv import load_dotenv
 
 load_dotenv()
 
 from browser_use.config import CONFIG
+
+# Module-level runtime log level control
+_runtime_log_level: str | None = None
+_runtime_log_level_lock = Lock()
+
+
+def set_log_level_runtime(level: str) -> None:
+	"""Change log level at runtime without restarting.
+
+	Args:
+		level: One of 'debug', 'info', 'result', 'critical'
+	"""
+	global _runtime_log_level
+	valid_levels = ('debug', 'info', 'result', 'critical')
+	if level not in valid_levels:
+		raise ValueError(f'Invalid log level: {level}. Must be one of {valid_levels}')
+
+	with _runtime_log_level_lock:
+		_runtime_log_level = level
+
+	# Update all browser_use loggers
+	browser_use_logger = logging.getLogger('browser_use')
+	if level == 'result':
+		browser_use_logger.setLevel(35)  # RESULT level
+	elif level == 'debug':
+		browser_use_logger.setLevel(logging.DEBUG)
+	elif level == 'critical':
+		browser_use_logger.setLevel(logging.CRITICAL)
+	else:
+		browser_use_logger.setLevel(logging.INFO)
+
+
+def get_log_level_runtime() -> str:
+	"""Get current runtime log level."""
+	with _runtime_log_level_lock:
+		return _runtime_log_level or CONFIG.BROWSER_USE_LOGGING_LEVEL
 
 
 def addLoggingLevel(levelName, levelNum, methodName=None):
@@ -77,7 +114,7 @@ def setup_logging(stream=None, log_level=None, force_setup=False, debug_log_file
 	except AttributeError:
 		pass  # Level already exists, which is fine
 
-	log_type = log_level or CONFIG.BROWSER_USE_LOGGING_LEVEL
+	log_type = log_level or (_runtime_log_level if _runtime_log_level else CONFIG.BROWSER_USE_LOGGING_LEVEL)
 
 	# Check if handlers are already set up
 	if logging.getLogger().hasHandlers() and not force_setup:

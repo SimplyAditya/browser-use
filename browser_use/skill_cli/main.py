@@ -581,6 +581,9 @@ def send_command(action: str, params: dict, *, session: str = 'default', agent_i
 
 	sock = _connect_to_daemon(session=session)
 	try:
+		# Disable timeout for long-running operations (like agent tasks)
+		sock.settimeout(None)
+
 		# Send request
 		sock.sendall((json.dumps(request) + '\n').encode())
 

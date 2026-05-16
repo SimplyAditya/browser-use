@@ -22,6 +22,8 @@ dependencies = [
     "posthog==7.7.0",
     "psutil==7.2.2",
     "pydantic==2.12.5",
+	"fastapi>=0.128.0",
+	"uvicorn>=0.40.0",
     "pyobjc==12.1; platform_system == 'darwin'",
     "python-dotenv==1.2.1",
     "requests==2.33.0",
@@ -99,6 +101,7 @@ browseruse = "browser_use.skill_cli.main:main"  # Alias for browser-use
 bu = "browser_use.skill_cli.main:main"  # Alias for browser-use
 browser = "browser_use.skill_cli.main:main"  # Alias for browser-use
 browser-use-tui = "browser_use.cli:main"  # Legacy TUI interface
+browser-use-server = "browser_use.server.app:run_server"  # Backend HTTP server
 
 [build-system]
 requires = ["hatchling"]
